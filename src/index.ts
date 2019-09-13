@@ -1,12 +1,7 @@
-// const express = require('express')
-import express from 'express'
-const app = express()
+import App from './app'
+import HelloWorldController from './controller/hello-world-controller'
+
 const port = 8080
+const app = new App([new HelloWorldController()], port)
 
-app.get('/', (req, res) => {
-  res.send('Hello world!')
-})
-
-app.listen(port, () => {
-  console.log(`server started at http://localhost:${port}`)
-})
+app.listen()
