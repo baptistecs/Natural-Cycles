@@ -1,6 +1,6 @@
 import App from './app'
-import HelloWorldController from './controller/hello-world-controller'
+import HomeController from './controller/home-controller'
 
-const app = new App([new HelloWorldController()])
+const app = new App([new HomeController()])
 
 app.listen()

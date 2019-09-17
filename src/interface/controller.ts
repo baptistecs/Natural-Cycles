@@ -1,7 +1,7 @@
 import * as express from 'express'
 
 interface ControllerInterface {
-  path: string
+  readonly path: string
   router: express.Router
 }
 
