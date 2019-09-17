@@ -1,0 +1,42 @@
+
+// valid emails
+
+simple@example.com
+very.common@example.com
+disposable.style.email.with+symbol@example.com
+other.email-with-hyphen@example.com
+fully-qualified-domain@example.com
+user.name+tag+sorting@example.com
+x@example.com 
+example-indeed@strange-example.com
+admin@mailserver1
+example@s.example
+" "@example.org
+"john..doe"@example.org
+
+Abc@example.com
+Abc.123@example.com
+user+mailbox/department=shipping@example.com
+!#$%&'*+-/=?^_`.{|}~@example.com
+"Abc@def"@example.com
+"Fred Bloggs"@example.com
+"Joe.\\Blow"@example.com
+
+用户@例子.广告
+अजय@डाटा.भारत
+квіточка@пошта.укр
+θσερ@εχαμπλε.ψομ
+Dörte@Sörensen.example.com
+коля@пример.рф
+
+// not valid emails
+
+Abc.example.com
+A@b@c@example.com
+a"b(c)d,e:f;g<h>i[j\k]l@example.com
+just"not"right@example.com
+this is"not\allowed@example.com
+this\ still\"not\\allowed@example.com
+// max 64 chars for local part
+1234567890123456789012345678901234567890123456789012345678901234+x@example.com
+John..Doe@example.com
