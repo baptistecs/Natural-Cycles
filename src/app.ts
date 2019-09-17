@@ -1,13 +1,12 @@
-import express from 'express'
-import bodyParser from 'body-parser'
+import Express from 'express'
 import ControllerInterface from './interface/controller'
 
 class App {
-  public app: express.Application
+  public app: Express.Application
   public port: number
 
   constructor(controllers: ControllerInterface[], port: number) {
-    this.app = express()
+    this.app = Express()
     this.port = port
 
     this.initializeMiddlewares()
@@ -15,7 +14,8 @@ class App {
   }
 
   private initializeMiddlewares() {
-    this.app.use(bodyParser.json())
+    this.app.use(Express.json()) // to support JSON-encoded bodies
+    this.app.use(Express.urlencoded({ extended: true })) // to support URL-encoded bodies
   }
 
   private initializeControllers(controllers: ControllerInterface[]) {
