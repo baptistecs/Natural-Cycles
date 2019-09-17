@@ -1,17 +1,13 @@
 import ControllerInterface from '../interface/controller'
 import Express from 'express'
+import UserController from './user-controller'
 
 class HomeController implements ControllerInterface {
   readonly path: string = '/'
   router: Express.Router = Express.Router()
 
-  constructor() {
-    this.router.get(
-      this.path,
-      (req: Express.Request, res: Express.Response) => {
-        res.send('Welcome home')
-      },
-    )
+  constructor(userController: UserController) {
+    this.router.get(this.path, userController.render)
   }
 }
 

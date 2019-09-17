@@ -14,7 +14,8 @@
     "express",
     "typescript",
     "prettier",
-    "session"
+    "session",
+    "CRUD"
   ],
   "author": "Baptiste Clarey Sjöstrand",
   "license": "GPL-3.0-only",
