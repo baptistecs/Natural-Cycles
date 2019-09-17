@@ -1,0 +1,7 @@
+{
+  "name": "ncs",
+  "secret": "CF1!xtCfDC4A#CQG4Vqvr5bggseb!adv",
+  "cookie": { "secure": "auto" },
+  "resave": true,
+  "saveUninitialized": true
+}
