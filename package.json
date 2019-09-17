@@ -4,9 +4,10 @@
   "description": "Backend Challenge",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "prod-start": "NODE_ENV=production node .",
+    "start": "NODE_ENV=development node .",
     "prestart": "npm run build",
-    "start": "node .",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
