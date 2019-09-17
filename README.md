@@ -12,7 +12,7 @@ $ npm run start
 ## Production Quickstart
 
 ```
-$ npm install
+$ npm install --only=production
 $ npm run prod-start
 ```
 
