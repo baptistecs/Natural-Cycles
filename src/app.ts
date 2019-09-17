@@ -32,7 +32,7 @@ class App {
     })
   }
 
-  public listen() {
+  public run() {
     this.app.listen(this.appConfig.port, () => {
       console.log(`App listening on the port ${this.appConfig.port}`)
     })

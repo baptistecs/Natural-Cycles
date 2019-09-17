@@ -3,4 +3,4 @@ import HomeController from './controller/home-controller'
 
 const app = new App([new HomeController()])
 
-app.listen()
+app.run()
