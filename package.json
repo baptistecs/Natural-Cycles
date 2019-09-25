@@ -15,7 +15,9 @@
     "typescript",
     "prettier",
     "session",
-    "CRUD"
+    "CRUD",
+    "firebase",
+    "realtime database"
   ],
   "author": "Baptiste Clarey Sjöstrand",
   "license": "GPL-3.0-only",
@@ -25,7 +27,8 @@
   },
   "dependencies": {
     "express": "^4.17.1",
-    "express-session": "^1.16.2"
+    "express-session": "^1.16.2",
+    "firebase-admin": "^8.5.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.1",
