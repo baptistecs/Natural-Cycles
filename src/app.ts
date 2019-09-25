@@ -4,11 +4,14 @@ import AppConfig from './interface/app-config'
 import Session, { SessionOptions } from 'express-session'
 
 class App {
+  private static instance: App
   public app: Express.Application
   private appConfig: AppConfig
   private sessionConfig: SessionOptions
+  private controllers: ControllerInterface[]
 
-  constructor(controllers: ControllerInterface[]) {
+  private constructor(controllers: ControllerInterface[]) {
+    this.controllers = controllers
     const ENV = process.env.NODE_ENV || 'development' // this.app.get('env')
 
     this.appConfig = require('../config/' + ENV + '/app.json')
@@ -17,7 +20,14 @@ class App {
     this.app = Express()
 
     this.initializeMiddlewares()
-    this.initializeControllers(controllers)
+    this.initializeControllers()
+  }
+
+  static getInstance(controllers: ControllerInterface[]): App {
+    if (!App.instance) {
+      App.instance = new App(controllers)
+    }
+    return App.instance
   }
 
   private initializeMiddlewares() {
@@ -26,8 +36,8 @@ class App {
     this.app.use(Session(this.sessionConfig))
   }
 
-  private initializeControllers(controllers: ControllerInterface[]) {
-    controllers.forEach(controller => {
+  private initializeControllers() {
+    this.controllers.forEach(controller => {
       this.app.use('/', controller.router)
     })
   }
