@@ -1,16 +1,21 @@
 import Validator from '../tool/validator'
 
 class User {
-  private id?: string
-  private email?: string
+  private id!: string // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-7.html#definite-assignment-assertions
+  private email!: string
 
-  constructor(id?: string, email?: string) {
+  constructor(email: string, id?: string) {
+    this.setEmail(email)
     if (id) {
       this.setId(id)
+    } else {
+      this.generateIdFromEmail()
     }
-    if (email) {
-      this.setEmail(email)
-    }
+  }
+
+  // !! TODO !!
+  private generateIdFromEmail() {
+    // this.getEmail()
   }
 
   // SETTERS & GETTERS
@@ -30,7 +35,7 @@ class User {
 
   setEmail(email: string) {
     if (!Validator.isEmail(email)) {
-      throw new Error('Invalid email address')
+      throw new Error('Invalid email address' + JSON.stringify(email))
     }
     this.email = email
     return this
