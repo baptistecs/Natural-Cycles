@@ -42,9 +42,18 @@ class App {
     })
   }
 
+  private runControllersOnAppStart() {
+    this.controllers.forEach(controller => {
+      if (typeof controller.onAppStart == 'function') {
+        controller.onAppStart()
+      }
+    })
+  }
+
   public run() {
     this.app.listen(this.appConfig.port, () => {
       console.log(`App listening on the port ${this.appConfig.port}`)
+      this.runControllersOnAppStart()
     })
   }
 }
