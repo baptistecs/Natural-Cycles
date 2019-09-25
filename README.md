@@ -18,7 +18,9 @@ $ npm run prod-start
 
 ## TODO
 
-- add code documentation
+- define generateIdFromEmail in user controller
+- add config howto in README
+- add code documentation https://medium.com/4thought-studios/documenting-javascript-projects-f72429da2eea
 - unit testing
 - ~~App & FirebaseDB singleton~~
 - implement an iterator on UserCollection
