@@ -13,9 +13,17 @@ class User {
     }
   }
 
-  // !! TODO !!
   private generateIdFromEmail() {
-    // this.getEmail()
+    this.setId(
+      this.getEmail()
+        .toLowerCase()
+        .replace(/\./g, '_dot_') // firebase key limitations
+        .replace(/#/g, '_diese_')
+        .replace(/\$/g, '_dollar_')
+        .replace(/\//g, '_slash_')
+        .replace(/\[/g, '_obracket_')
+        .replace(/\]/g, '_cbracket_'),
+    )
   }
 
   // SETTERS & GETTERS
@@ -35,7 +43,7 @@ class User {
 
   setEmail(email: string) {
     if (!Validator.isEmail(email)) {
-      throw new Error('Invalid email address' + JSON.stringify(email))
+      throw new Error('Invalid email address ' + JSON.stringify(email))
     }
     this.email = email
     return this
