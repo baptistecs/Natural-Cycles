@@ -4,7 +4,7 @@ import UserController from './controller/user-controller'
 
 const userController = new UserController()
 const app = App.getInstance([
-  new HomeController(userController),
+  new HomeController(userController.list),
   userController,
 ])
 
