@@ -4,6 +4,8 @@ import { default as Firebase, EventType } from '../tool/firebase'
 import User from '../model/user'
 import UserCollection from '../interface/user-collection'
 import ENV from '../tool/env'
+import { htmlEntities } from '../tool/string'
+
 // import { DocumentReference } from '@google-cloud/firestore'
 
 class UserController implements ControllerInterface {
@@ -102,7 +104,9 @@ class UserController implements ControllerInterface {
 
           if (req.body._redirect) {
             sess.successMessage = 'User created successfully'
-            res.redirect(this.path + '/' + user.getId() + '/edit')
+            res.redirect(
+              this.path + '/' + encodeURIComponent(user.getId()) + '/edit',
+            )
           } else {
             res.status(201).json({
               error: false,
@@ -201,7 +205,9 @@ class UserController implements ControllerInterface {
 
           if (req.body._redirect) {
             sess.successMessage = 'User updated successfully'
-            res.redirect(this.path + '/' + user.getId() + '/edit')
+            res.redirect(
+              this.path + '/' + encodeURIComponent(user.getId()) + '/edit',
+            )
           } else {
             res.status(200).json({
               error: false,
@@ -215,7 +221,12 @@ class UserController implements ControllerInterface {
 
           if (req.body._redirect) {
             sess.errorMessage = reason.toString()
-            res.redirect(this.path + '/' + req.params.user_id + '/edit')
+            res.redirect(
+              this.path +
+                '/' +
+                encodeURIComponent(req.params.user_id) +
+                '/edit',
+            )
           } else {
             res.status(500).json({
               error: true,
@@ -229,7 +240,9 @@ class UserController implements ControllerInterface {
 
       if (req.body._redirect) {
         sess.errorMessage = userError.toString()
-        res.redirect(this.path + '/' + req.params.user_id + '/edit')
+        res.redirect(
+          this.path + '/' + encodeURIComponent(req.params.user_id) + '/edit',
+        )
       } else {
         res.status(400).json({ error: true, message: userError.toString() })
       }
@@ -333,8 +346,8 @@ class UserController implements ControllerInterface {
 
     for (let userId in users) {
       html += `<tr>
-        <td>${userId}</td>
-        <td>${users[userId].getEmail()}</td>
+        <td>${htmlEntities(userId)}</td>
+        <td>${htmlEntities(users[userId].getEmail())}</td>
         <td>
           <a href="${this.path}/${encodeURIComponent(userId)}/edit">Edit</a>
         </td>
@@ -364,12 +377,14 @@ class UserController implements ControllerInterface {
       deleteForm = ''
 
     if (sess.successMessage) {
-      successHtml += `<b class="success">${sess.successMessage}</b>\n`
+      successHtml += `<b class="success">${htmlEntities(
+        sess.successMessage,
+      )}</b>\n`
       delete sess.successMessage
     }
 
     if (sess.errorMessage) {
-      errorHtml += `<b class="error">${sess.errorMessage}</b>\n`
+      errorHtml += `<b class="error">${htmlEntities(sess.errorMessage)}</b>\n`
       delete sess.errorMessage
     }
 
@@ -378,11 +393,13 @@ class UserController implements ControllerInterface {
         userEmail = UserController.getUser(req.params.user_id).getEmail()
       } catch (userError) {
         console.error(userError)
-        errorHtml += `<b class="error">${userError}</b><br>\n`
+        errorHtml += `<b class="error">${htmlEntities(userError)}</b><br>\n`
       }
 
       deleteForm = `
-        <form action="${this.path}/${req.params.user_id}" method="post"
+        <form action="${this.path}/${encodeURIComponent(
+        req.params.user_id,
+      )}" method="post"
           onsubmit="return confirm('Confirm the deletion?')"
           style="max-width:400px;margin:auto">
           <input type="hidden" name="_method" value="DELETE">
@@ -413,7 +430,9 @@ class UserController implements ControllerInterface {
           <h1>User ${userId ? 'update' : 'creation'}</h1>
           ${successHtml + errorHtml}
           <form method="post"
-            action="${this.path}${userId ? '/' + req.params.user_id : ''}">
+            action="${this.path}${
+      userId ? '/' + encodeURIComponent(req.params.user_id) : ''
+    }">
             ${userId ? `<input type="hidden" name="_method" value="PUT">` : ''}
             <input type="hidden" name="_redirect" value="1">
             <fieldset>
@@ -422,13 +441,9 @@ class UserController implements ControllerInterface {
               <input id="email" type="email" name="email"
                 ${
                   userId
-                    ? ' value="' + userEmail + '"'
+                    ? ' value="' + htmlEntities(userEmail) + '"'
                     : req.query.email
-                    ? ' value="' +
-                      req.query.email.replace(/./gm, function(s: any) {
-                        return '&#' + s.charCodeAt(0) + ';'
-                      }) /* escape for XSS */ +
-                      '"'
+                    ? ' value="' + htmlEntities(req.query.email) + '"'
                     : ''
                 }>
               <button>${userId ? 'Update' : 'Create'}</button>
