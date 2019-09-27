@@ -40,10 +40,17 @@ class Firebase {
     childPath: string, // e.g. "user"
     key: string, // must be non-empty strings and can't contain ".", "#", "$", "/", "[", or "]"
     data: Object,
-  ) {
+  ): Promise<void> {
     // let value: { [k: string]: any } = {}
     // value[key] = data
-    this.ref.child(childPath + '/' + key).set(data)
+    return this.ref.child(childPath + '/' + key).set(data)
+  }
+
+  removeObject(
+    childPath: string, // e.g. "user"
+    key: string, // must be non-empty strings and can't contain ".", "#", "$", "/", "[", or "]"
+  ): Promise<void> {
+    return this.ref.child(childPath + '/' + key).remove()
   }
 
   pushObject(
@@ -66,3 +73,4 @@ class Firebase {
 }
 
 export default Firebase
+export type EventType = FirebaseAdmin.database.EventType
