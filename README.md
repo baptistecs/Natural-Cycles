@@ -31,6 +31,7 @@ $ npm run prod-start
 - use namespaces? https://www.typescriptlang.org/docs/handbook/namespaces-and-modules.html
 - encrypt email
 - use Helmet & check "Production Best Practices: Security" https://expressjs.com/en/advanced/best-practice-security.html
+- use of cors https://www.npmjs.com/package/cors
 - secure form post values before saving in session / db
 - create a User model and use it in the session
 - SessionInterface set userId and userEmail as optionnal (userId?: string) and as an user object User{id: string; email: string}?
