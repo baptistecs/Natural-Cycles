@@ -3,6 +3,7 @@ import ControllerInterface from './interface/controller'
 import AppConfig from './interface/app-config'
 import Session, { SessionOptions } from 'express-session'
 import MethodOverride from 'method-override'
+import ENV from './tool/env'
 
 class App {
   private static instance: App
@@ -13,11 +14,8 @@ class App {
 
   private constructor(controllers: ControllerInterface[]) {
     this.controllers = controllers
-    const ENV = process.env.NODE_ENV || 'development' // this.app.get('env')
-
     this.appConfig = require('../config/' + ENV + '/app.json')
     this.sessionConfig = require('../config/' + ENV + '/session.json')
-
     this.app = Express()
 
     this.initializeMiddlewares()

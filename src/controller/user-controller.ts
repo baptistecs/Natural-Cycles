@@ -3,6 +3,7 @@ import Express from 'express'
 import { default as Firebase, EventType } from '../tool/firebase'
 import User from '../model/user'
 import UserCollection from '../interface/user-collection'
+import ENV from '../tool/env'
 // import { DocumentReference } from '@google-cloud/firestore'
 
 class UserController implements ControllerInterface {
@@ -30,7 +31,6 @@ class UserController implements ControllerInterface {
   }
 
   addRealtimeDatabaseUserListeners() {
-    const ENV = process.env.NODE_ENV || 'development' // this.app.get('env')
     let db = Firebase.getInstance(ENV)
     let eventTypes: EventType[] = [
       // 'value', // sends a bunch of users
@@ -92,7 +92,6 @@ class UserController implements ControllerInterface {
 
     try {
       let user = new User(req.body.email)
-      const ENV = process.env.NODE_ENV || 'development' // this.app.get('env')
       let rtdb = Firebase.getInstance(ENV)
 
       rtdb.setObject('user', user.getId(), user).then(
@@ -192,7 +191,6 @@ class UserController implements ControllerInterface {
 
       user.setEmail(req.body.email)
 
-      const ENV = process.env.NODE_ENV || 'development' // this.app.get('env')
       let rtdb = Firebase.getInstance(ENV)
 
       rtdb.setObject('user', user.getId(), user).then(
@@ -257,8 +255,6 @@ class UserController implements ControllerInterface {
 
     try {
       let user = UserController.users[req.params.user_id]
-
-      const ENV = process.env.NODE_ENV || 'development' // this.app.get('env')
       let rtdb = Firebase.getInstance(ENV)
 
       rtdb.removeObject('user', user.getId()).then(
