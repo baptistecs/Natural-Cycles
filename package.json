@@ -1,7 +1,11 @@
 {
   "name": "natural-cycles",
   "version": "1.0.0",
-  "description": "Backend Challenge",
+  "description": "Backend Challenge. Firebase require node >=8.13.0",
+  "engines": {
+    "node": ">=8.13.0"
+  },
+  "engineStrict": true,
   "main": "dist/index.js",
   "scripts": {
     "prod-start": "NODE_ENV=production node .",
