@@ -26,6 +26,7 @@
     "url": "https://github.com/baptistecs/Natural-Cycles.git"
   },
   "dependencies": {
+    "blake2b": "^2.1.3",
     "express": "^4.17.1",
     "express-session": "^1.16.2",
     "firebase-admin": "^8.5.0",
