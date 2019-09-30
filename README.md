@@ -71,7 +71,7 @@ $ npm run prod-start
 
 - Use a session store in order to keep the client session through all instances and to be server crash resilient (such as connect-redis)
 - If there is a huge amount of accounts and/or few memory on the server, remove UserController.users (UserCollection) and query directly the database
-- If the app is use behind a proxy: https://expressjs.com/en/guide/behind-proxies.html
+- If the app is used behind a proxy: https://expressjs.com/en/guide/behind-proxies.html
 - Emails should be encrypted in the database (if someone access to the data, he should not be able to get the emails)
 - Use Helmet & follow "Production Best Practices: Security" https://expressjs.com/en/advanced/best-practice-security.html
 - Use the cors in order to reduce unexpected traffic https://www.npmjs.com/package/cors
