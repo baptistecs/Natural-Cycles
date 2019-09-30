@@ -1,4 +1,5 @@
 import FirebaseAdmin from 'firebase-admin'
+import ENV from '../tool/env'
 
 class Firebase {
   private static instance: Firebase
@@ -16,7 +17,7 @@ class Firebase {
   }
 
   static getInstance(
-    parentPath?: string | FirebaseAdmin.database.Reference | undefined,
+    parentPath: string | FirebaseAdmin.database.Reference | undefined = ENV,
   ): Firebase {
     if (!Firebase.instance) {
       Firebase.instance = new Firebase(parentPath)
@@ -34,6 +35,19 @@ class Firebase {
         callback(snapshot.key as string, snapshot.val())
       }
     })
+  }
+
+  getFirstObjectByChildProperty(
+    childPath: string, // e.g. "user"
+    property: string, // e.g. "email"
+    value: string | number | boolean | null, // e.g. "test@test.Com"
+  ): Promise<FirebaseAdmin.database.DataSnapshot> {
+    return this.ref
+      .child(childPath)
+      .orderByChild(property)
+      .equalTo(value)
+      .limitToFirst(1)
+      .once('value')
   }
 
   setObject(
@@ -67,9 +81,6 @@ class Firebase {
         throw new Error(reason)
       })
   }
-
-  // .ref('/user')
-  // .set({ email: 'GET Request' })
 }
 
 export default Firebase
