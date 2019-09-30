@@ -3,10 +3,8 @@ import Express from 'express'
 import { default as Firebase, EventType } from '../tool/firebase'
 import User from '../model/user'
 import UserCollection from '../interface/user-collection'
-import ENV from '../tool/env'
+import Blake2b from '../tool/blake2b'
 import { htmlEntities } from '../tool/string'
-
-// import { DocumentReference } from '@google-cloud/firestore'
 
 class UserController implements ControllerInterface {
   readonly path: string = '/user'
@@ -33,14 +31,9 @@ class UserController implements ControllerInterface {
   }
 
   addRealtimeDatabaseUserListeners() {
-    let db = Firebase.getInstance(ENV)
-    let eventTypes: EventType[] = [
-      // 'value', // sends a bunch of users
-      'child_added', // sends user by user
-      'child_changed', // sends user by user
-      // 'child_moved', // sends user by user // when sorted
-      // 'child_removed', // sends user by user
-    ]
+    let db = Firebase.getInstance()
+    // value EventType sends all users, child_* sends user by user.
+    let eventTypes: EventType[] = ['child_added', 'child_changed']
 
     // adds & updates
     eventTypes.forEach(eventType => {
@@ -84,8 +77,12 @@ class UserController implements ControllerInterface {
 
   create = async (req: Express.Request, res: Express.Response) => {
     const sess: any = req.session
+    let email = req.body.email
+    let user: User
+    let db: Firebase
+    let errorCode = 400 // Bad Request
 
-    if (!req.body.email) {
+    if (!email) {
       let message = 'Email is required for user creation'
       console.error(message)
       res.status(400).json({ error: true, message: message })
@@ -93,52 +90,103 @@ class UserController implements ControllerInterface {
     }
 
     try {
-      let user = new User(req.body.email)
-      let rtdb = Firebase.getInstance(ENV)
+      // small perf improvement: better to exec regex + toLowerCase twice than
+      // to generate a hash for nothing (to be tested though...)
+      if (!User.checkEmail(email)) {
+        User.throwEmailError(email)
+      }
 
-      rtdb.setObject('user', user.getId(), user).then(
-        () => {
-          // quick update on this node so we don't wait for db notif, hoping that
-          // the load balancer is setup so it keep clients on the same node
-          UserController.users[user.getId()] = user
+      // WARN: hash generated must be done with the formated email in order to
+      // ease the unicity check
+      let emailFormated = User.emailFormat(email)
+      let userId = ''
 
-          if (req.body._redirect) {
-            sess.successMessage = 'User created successfully'
-            res.redirect(
-              this.path + '/' + encodeURIComponent(user.getId()) + '/edit',
-            )
-          } else {
-            res.status(201).json({
-              error: false,
-              message: 'User created successfully',
-              user: user,
-            })
+      Blake2b.getInstance()
+        .getDigest(emailFormated)
+        .then(digest => {
+          let userExist = UserController.users[digest]
+          // test if user already exist by id
+          if (userExist) {
+            errorCode = 409 // conflict
+            if (userExist.getEmail() == emailFormated) {
+              console.log(emailFormated)
+              throw new Error('An account already exists with this email')
+            } else {
+              console.log(emailFormated + ' ' + userExist.getId())
+              throw new Error(`An account have been created with this email and
+                the email have been updated. Please update the email in the
+                existing account if needed.`)
+            }
           }
-        },
-        reason => {
-          console.error(reason)
 
-          if (req.body._redirect) {
-            sess.errorMessage = reason.toString()
-            res.redirect(
-              this.path + '?email=' + encodeURIComponent(req.body.email),
-            )
-          } else {
-            res.status(500).json({
-              error: true,
-              message: reason,
-            })
+          userId = digest
+
+          // test if user exists in database by email having an old ID (from a previous email)
+          db = Firebase.getInstance()
+          return db.getFirstObjectByChildProperty(
+            'user',
+            'email',
+            emailFormated,
+          )
+        })
+        .then(userSnapshot => {
+          if (userSnapshot.exists()) {
+            errorCode = 409 // conflict
+            console.log(emailFormated)
+            // let dbUser = userSnapshot.exportVal()
+            // let key = Object.keys(dbUser)[0]
+            throw new Error('An account already exists with this email')
           }
-        },
-      )
+
+          user = new User(email, userId)
+
+          return db.setObject('user', user.getId(), user)
+        })
+        .then(
+          () => {
+            // quick update on this node so we don't wait for db notif, hoping that
+            // the load balancer is setup so it keep clients on the same node
+            UserController.users[user.getId()] = user
+
+            if (req.body._redirect) {
+              sess.successMessage = 'User created successfully'
+              res.redirect(
+                this.path + '/' + encodeURIComponent(user.getId()) + '/edit',
+              )
+            } else {
+              // 201 created
+              res.status(201).json({
+                error: false,
+                message: 'User created successfully',
+                user: user,
+              })
+            }
+          },
+          reason => {
+            console.error(reason)
+
+            if (req.body._redirect) {
+              sess.errorMessage = reason.toString()
+              res.redirect(this.path + '?email=' + encodeURIComponent(email))
+            } else {
+              // internal server error
+              res.status(500).json({
+                error: true,
+                message: reason.toString(),
+              })
+            }
+          },
+        )
     } catch (userError) {
       console.error(userError)
 
       if (req.body._redirect) {
         sess.errorMessage = userError.toString()
-        res.redirect(this.path + '?email=' + encodeURIComponent(req.body.email))
+        res.redirect(this.path + '?email=' + encodeURIComponent(email))
       } else {
-        res.status(400).json({ error: true, message: userError.toString() })
+        res
+          .status(errorCode)
+          .json({ error: true, message: userError.toString() })
       }
     }
   }
@@ -195,9 +243,9 @@ class UserController implements ControllerInterface {
 
       user.setEmail(req.body.email)
 
-      let rtdb = Firebase.getInstance(ENV)
+      let db = Firebase.getInstance()
 
-      rtdb.setObject('user', user.getId(), user).then(
+      db.setObject('user', user.getId(), user).then(
         () => {
           // quick update on this node so we don't wait for db notif, hoping that
           // the load balancer is setup so it keep clients on the same node
@@ -230,7 +278,7 @@ class UserController implements ControllerInterface {
           } else {
             res.status(500).json({
               error: true,
-              message: reason,
+              message: reason.toString(),
             })
           }
         },
@@ -268,9 +316,9 @@ class UserController implements ControllerInterface {
 
     try {
       let user = UserController.users[req.params.user_id]
-      let rtdb = Firebase.getInstance(ENV)
+      let db = Firebase.getInstance()
 
-      rtdb.removeObject('user', user.getId()).then(
+      db.removeObject('user', user.getId()).then(
         () => {
           // quick update on this node so we don't wait for db notif, hoping that
           // the load balancer is setup so it keep clients on the same node
@@ -296,7 +344,7 @@ class UserController implements ControllerInterface {
           } else {
             res.status(500).json({
               error: true,
-              message: reason,
+              message: reason.toString(),
             })
           }
         },
@@ -315,8 +363,6 @@ class UserController implements ControllerInterface {
 
   list = async (req: Express.Request, res: Express.Response) => {
     let users = UserController.getUsers()
-    // let nbUser = Object.keys(users).length
-    // res.setHeader('Content-Type', 'text/html; charset=utf-8') // only needed with res.write (not with res.send)
     let html = `<!doctype html>
       <html lang="en">
         <head>
