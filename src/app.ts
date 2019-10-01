@@ -11,10 +11,19 @@ class App {
   private controllers: ControllerInterface[]
 
   private constructor(controllers: ControllerInterface[]) {
-    DotENV() // generate environment variable from .env file
+    const result = DotENV() // generate environment variable from .env file
 
     if (!process.env.NODE_ENV) {
       throw new Error('ENV NODE_ENV is required')
+    }
+
+    // we skip file missing error but throw all other errors
+    // as the file is not supposed to exist in production
+    if (result.error) {
+      let error = result.error as any
+      if (error.code && error.code !== 'ENOENT') {
+        throw error
+      }
     }
 
     if (!process.env.PORT) {
