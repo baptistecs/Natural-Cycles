@@ -9,9 +9,15 @@ const method_override_1 = __importDefault(require("method-override"));
 const dotenv_1 = require("dotenv");
 class App {
     constructor(controllers) {
-        dotenv_1.config();
+        const result = dotenv_1.config();
         if (!process.env.NODE_ENV) {
             throw new Error('ENV NODE_ENV is required');
+        }
+        if (result.error) {
+            let error = result.error;
+            if (error.code && error.code !== 'ENOENT') {
+                throw error;
+            }
         }
         if (!process.env.PORT) {
             throw new Error('ENV PORT is required');
