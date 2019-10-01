@@ -1,5 +1,5 @@
 {
-  "name": "natural-cycles",
+  "name": "Natural-Cycles",
   "version": 2,
   "builds": [{ "src": "dist/**", "use": "@now/node" }],
   "routes": [{ "src": "/(.*)", "dest": "/dist/index.js" }],
