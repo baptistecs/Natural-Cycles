@@ -2,15 +2,23 @@
 
 Backend Challenge (Node.JS, Express, prettier & typescript)
 
-## Development Prerequisites
+## Development prerequisites
 
-Just follow the two following Firebase steps (Production Prerequisites) and you are ready to go (Development Quickstart)
+Copy `.env.example` to `.env`
 
-## Production Prerequisites
+Follow the two Firebase steps (see "Production prerequisites") and set the ENV variables (for all the "Production prerequisites" steps) in this `.env` file
+
+For the SESSION environment variable, use the development example
+
+Then you are ready to go (Development Quickstart)
+
+## Production prerequisites
 
 ### Firebase Realtime Database - Service account creation for Admin SDK
 
-Create a service account & save the content of the serviceAccountKey.json in the SERVICE_ACCOUNT environment variable
+Create a service account
+
+Save the content of the `serviceAccountKey.json` in the SERVICE_ACCOUNT environment variable
 
 Documentation: https://firebase.google.com/support/guides/service-accounts
 
@@ -39,7 +47,7 @@ In the Firebase Console > Project > Database > Rules, replace and save the follo
 
 Documentation: https://firebase.google.com/docs/database/security
 
-### Session Config
+### Session config
 
 Create the SESSION environment variable from the `.env.example` file (production example) & define name, secret & domain
 
