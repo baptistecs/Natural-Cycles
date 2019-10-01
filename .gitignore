@@ -1,4 +1,5 @@
 # APP
+.env
 config/development/firebase.json
 config/production/*
 

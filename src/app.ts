@@ -1,21 +1,32 @@
 import Express from 'express'
 import ControllerInterface from './interface/controller'
-import AppConfig from './interface/app-config'
 import Session, { SessionOptions } from 'express-session'
 import MethodOverride from 'method-override'
-import ENV from './tool/env'
+import { config as DotENV } from 'dotenv'
 
 class App {
   private static instance: App
   public app: Express.Application
-  private appConfig: AppConfig
   private sessionConfig: SessionOptions
   private controllers: ControllerInterface[]
 
   private constructor(controllers: ControllerInterface[]) {
+    DotENV() // generate environment variable from .env file
+
+    if (!process.env.NODE_ENV) {
+      throw new Error('ENV NODE_ENV is required')
+    }
+
+    if (!process.env.PORT) {
+      throw new Error('ENV PORT is required')
+    }
+
+    if (!process.env.SESSION) {
+      throw new Error('ENV SESSION is required')
+    }
+
     this.controllers = controllers
-    this.appConfig = require('../config/' + ENV + '/app.json')
-    this.sessionConfig = require('../config/' + ENV + '/session.json')
+    this.sessionConfig = JSON.parse(process.env.SESSION)
     this.app = Express()
 
     this.initializeMiddlewares()
@@ -61,8 +72,8 @@ class App {
   }
 
   public run() {
-    this.app.listen(this.appConfig.port, () => {
-      console.log(`App listening on the port ${this.appConfig.port}...`)
+    this.app.listen(process.env.PORT, () => {
+      console.log(`App listening on the port ${process.env.PORT}...`)
       this.runControllersOnAppStart()
     })
   }

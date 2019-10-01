@@ -10,7 +10,7 @@ Just follow the two following Firebase steps (Production Prerequisites) and you 
 
 ### Firebase Realtime Database - Service account creation for Admin SDK
 
-Create a service account & save the content of the serviceAccountKey.json in `config/production/firebase.json`
+Create a service account & save the content of the serviceAccountKey.json in the SERVICE_ACCOUNT environment variable
 
 Documentation: https://firebase.google.com/support/guides/service-accounts
 
@@ -41,27 +41,51 @@ Documentation: https://firebase.google.com/docs/database/security
 
 ### Session Config
 
-Copy file from `config/example/session.json` to `config/production/session.json`
-
-Define name, secret & domain and remove comments (as JSON format do not allow comments)
+Create the SESSION environment variable from the `.env.example` file (production example) & define name, secret & domain
 
 Documentation: https://www.npmjs.com/package/express-session
 
+#### WARNING if `session.cookie.secure = true`
+
+The connexion should be https and https only
+
+If NGINX proxy is used, NGINX conf should contain:
+
+```
+map $http_x_forwarded_proto $proxy_x_forwarded_proto {
+  default $http_x_forwarded_proto;
+  ''      $scheme;
+}
+proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+```
+
+#### Info
+
+`session.cookie.domain = "domain.com"`
+
+main domain (and subdomains for news browsers)
+
+`session.cookie.maxAge = 3153600000000`
+
+1000 ms x 60 s x 60 m x 24 h x 365 j = 100 ans
+
 ### Blake2b config
 
-Copy file from `config/example/blake2b.json` to `config/production/blake2b.json`
-
-Define key and salt
+Create the BLAKE2B environment variable from the `.env.example` file & define key & salt
 
 ### App config
 
-Define backend port in `config/production/app.json`
+Create the PORT environment variable from the `.env.example` file & define the backend application port
+
+Create the NODE_ENV environment variable from the `.env.example` file & define the environment (`development`, `production`, ...)
 
 ## Development Quickstart
 
-```
+````
+
 $ npm install
 $ npm run start
+
 ```
 
 Open http://localhost:8080
@@ -69,8 +93,10 @@ Open http://localhost:8080
 ## Production Quickstart
 
 ```
+
 $ npm install --only=production
 $ npm run prod-start
+
 ```
 
 ## Before to use in production
@@ -88,7 +114,6 @@ $ npm run prod-start
 - use git-secrets for saving keys (firebase, cookie, blake2b...)
 - Backend authentification
 - Unit testing
-- Make config files required on startup (for controllers and tool classes)
 - Add code documentation https://typedoc.org/guides/doccomments/
 - Implement an iterator on UserCollection
 - HTTPS SSL certificate
@@ -112,3 +137,5 @@ $ npm run prod-start
 - https://firebase.google.com/docs/database/admin/start
 - https://nodejs.org/api/cluster.html
 - https://cloud.google.com/blog/products/gcp/help-keep-your-google-cloud-service-account-keys-safe
+```
+````

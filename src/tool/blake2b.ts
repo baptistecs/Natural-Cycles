@@ -1,5 +1,4 @@
 import Blake2bConfig from '../interface/blake2b-config'
-import ENV from '../tool/env'
 let Blake2b = require('blake2b')
 
 /**
@@ -9,14 +8,25 @@ let Blake2b = require('blake2b')
  */
 export default class Blake2bWrapper {
   private static instance: Blake2bWrapper
-  private config = require('../../config/' +
-    ENV +
-    '/blake2b.json') as Blake2bConfig
   private key: Buffer
   private salt: Buffer
 
   private constructor() {
-    this.key = Buffer.from(this.config.key)
+    if (!process.env.BLAKE2B) {
+      throw new Error('ENV BLAKE2B is required')
+    }
+
+    const CONFIG: Blake2bConfig = JSON.parse(process.env.BLAKE2B)
+
+    if (!CONFIG.key) {
+      throw new Error('ENV BLAKE2B.key is required')
+    }
+
+    if (!CONFIG.salt) {
+      throw new Error('ENV BLAKE2B.salt is required')
+    }
+
+    this.key = Buffer.from(CONFIG.key)
     if (this.key.length > Blake2b.KEYBYTES_MAX) {
       throw new Error(
         'Key must be between ' +
@@ -26,7 +36,7 @@ export default class Blake2bWrapper {
           ' bytes long',
       )
     }
-    this.salt = Buffer.from(this.config.salt)
+    this.salt = Buffer.from(CONFIG.salt)
     if (this.key.length > Blake2b.KEYBYTES_MAX) {
       throw new Error(
         'Salt must be exactly ' + Blake2b.SALTBYTES + ' bytes long',

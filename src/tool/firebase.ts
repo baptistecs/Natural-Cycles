@@ -1,5 +1,4 @@
 import FirebaseAdmin from 'firebase-admin'
-import ENV from '../tool/env'
 
 class Firebase {
   private static instance: Firebase
@@ -8,16 +7,22 @@ class Firebase {
   private constructor(
     parentPath?: string | FirebaseAdmin.database.Reference | undefined,
   ) {
-    let serviceAccount = require('../../config/development/firebase.json')
+    if (!process.env.SERVICE_ACCOUNT) {
+      throw new Error('ENV SERVICE_ACCOUNT is required (Firebase config)')
+    }
+
     FirebaseAdmin.initializeApp({
-      credential: FirebaseAdmin.credential.cert(serviceAccount),
+      credential: FirebaseAdmin.credential.cert(
+        JSON.parse(process.env.SERVICE_ACCOUNT as string),
+      ),
       databaseURL: 'https://natural-cycles-1.firebaseio.com/',
     })
     this.ref = FirebaseAdmin.database().ref(parentPath)
   }
 
   static getInstance(
-    parentPath: string | FirebaseAdmin.database.Reference | undefined = ENV,
+    parentPath: string | FirebaseAdmin.database.Reference | undefined = process
+      .env.NODE_ENV,
   ): Firebase {
     if (!Firebase.instance) {
       Firebase.instance = new Firebase(parentPath)
