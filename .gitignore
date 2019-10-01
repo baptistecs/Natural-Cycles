@@ -1,3 +1,7 @@
+# APP
+config/development/firebase.json
+config/production/*
+
 # OS X
 .DS_Store*
 Icon?
