@@ -47,6 +47,12 @@ Define name, secret & domain and remove comments (as JSON format do not allow co
 
 Documentation: https://www.npmjs.com/package/express-session
 
+### Blake2b config
+
+Copy file from `config/example/blake2b.json` to `config/production/blake2b.json`
+
+Define key and salt
+
 ### App config
 
 Define backend port in `config/production/app.json`
@@ -79,6 +85,7 @@ $ npm run prod-start
 
 ## TODO (OR NOT)
 
+- use git-secrets for saving keys (firebase, cookie, blake2b...)
 - Backend authentification
 - Unit testing
 - Make config files required on startup (for controllers and tool classes)
@@ -104,3 +111,4 @@ $ npm run prod-start
 - https://en.wikipedia.org/wiki/Comparison_of_cryptographic_hash_functions
 - https://firebase.google.com/docs/database/admin/start
 - https://nodejs.org/api/cluster.html
+- https://cloud.google.com/blog/products/gcp/help-keep-your-google-cloud-service-account-keys-safe
