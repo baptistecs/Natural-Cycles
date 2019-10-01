@@ -1,0 +1,8 @@
+{
+  "name": "natural-cycles",
+  "env": { "NODE_ENV": "development" },
+  "version": 2,
+  "builds": [{ "src": "dist/**", "use": "@now/node" }],
+  "routes": [{ "src": "/(.*)", "dest": "/dist/index.js" }],
+  "github": { "enabled": true }
+}
