@@ -8,17 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const env_1 = __importDefault(require("../tool/env"));
 let Blake2b = require('blake2b');
 class Blake2bWrapper {
     constructor() {
-        this.config = require('../../config/' +
-            env_1.default +
-            '/blake2b.json');
         this.getDigest = (input, outFormat = 'hex', outLength = Blake2b.BYTES) => __awaiter(this, void 0, void 0, function* () {
             if (Math.round(outLength) !== outLength) {
                 console.warn('Blake2b.getHexDigest out parameter number must be an interger');
@@ -42,7 +35,17 @@ class Blake2bWrapper {
                 }
             });
         });
-        this.key = Buffer.from(this.config.key);
+        if (!process.env.BLAKE2B) {
+            throw new Error('ENV BLAKE2B is required');
+        }
+        const CONFIG = JSON.parse(process.env.BLAKE2B);
+        if (!CONFIG.key) {
+            throw new Error('ENV BLAKE2B.key is required');
+        }
+        if (!CONFIG.salt) {
+            throw new Error('ENV BLAKE2B.salt is required');
+        }
+        this.key = Buffer.from(CONFIG.key);
         if (this.key.length > Blake2b.KEYBYTES_MAX) {
             throw new Error('Key must be between ' +
                 Blake2b.KEYBYTES_MIN +
@@ -50,7 +53,7 @@ class Blake2bWrapper {
                 Blake2b.KEYBYTES_MAX +
                 ' bytes long');
         }
-        this.salt = Buffer.from(this.config.salt);
+        this.salt = Buffer.from(CONFIG.salt);
         if (this.key.length > Blake2b.KEYBYTES_MAX) {
             throw new Error('Salt must be exactly ' + Blake2b.SALTBYTES + ' bytes long');
         }

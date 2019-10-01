@@ -6,12 +6,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const express_session_1 = __importDefault(require("express-session"));
 const method_override_1 = __importDefault(require("method-override"));
-const env_1 = __importDefault(require("./tool/env"));
+const dotenv_1 = require("dotenv");
 class App {
     constructor(controllers) {
+        dotenv_1.config();
+        if (!process.env.NODE_ENV) {
+            throw new Error('ENV NODE_ENV is required');
+        }
+        if (!process.env.PORT) {
+            throw new Error('ENV PORT is required');
+        }
+        if (!process.env.SESSION) {
+            throw new Error('ENV SESSION is required');
+        }
         this.controllers = controllers;
-        this.appConfig = require('../config/' + env_1.default + '/app.json');
-        this.sessionConfig = require('../config/' + env_1.default + '/session.json');
+        this.sessionConfig = JSON.parse(process.env.SESSION);
         this.app = express_1.default();
         this.initializeMiddlewares();
         this.initializeControllers();
@@ -48,8 +57,8 @@ class App {
         });
     }
     run() {
-        this.app.listen(this.appConfig.port, () => {
-            console.log(`App listening on the port ${this.appConfig.port}...`);
+        this.app.listen(process.env.PORT, () => {
+            console.log(`App listening on the port ${process.env.PORT}...`);
             this.runControllersOnAppStart();
         });
     }

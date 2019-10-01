@@ -4,17 +4,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
-const env_1 = __importDefault(require("../tool/env"));
 class Firebase {
     constructor(parentPath) {
-        let serviceAccount = require('../../config/development/firebase.json');
+        if (!process.env.SERVICE_ACCOUNT) {
+            throw new Error('ENV SERVICE_ACCOUNT is required (Firebase config)');
+        }
         firebase_admin_1.default.initializeApp({
-            credential: firebase_admin_1.default.credential.cert(serviceAccount),
+            credential: firebase_admin_1.default.credential.cert(JSON.parse(process.env.SERVICE_ACCOUNT)),
             databaseURL: 'https://natural-cycles-1.firebaseio.com/',
         });
         this.ref = firebase_admin_1.default.database().ref(parentPath);
     }
-    static getInstance(parentPath = env_1.default) {
+    static getInstance(parentPath = process
+        .env.NODE_ENV) {
         if (!Firebase.instance) {
             Firebase.instance = new Firebase(parentPath);
         }
