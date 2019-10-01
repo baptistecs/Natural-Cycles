@@ -1,8 +1,14 @@
 {
   "name": "natural-cycles",
-  "env": { "NODE_ENV": "development" },
   "version": 2,
   "builds": [{ "src": "dist/**", "use": "@now/node" }],
   "routes": [{ "src": "/(.*)", "dest": "/dist/index.js" }],
-  "github": { "enabled": true }
+  "github": { "enabled": true },
+  "env": {
+    "NODE_ENV": "@node_env",
+    "PORT": "@port",
+    "BLAKE2B": "@blake2b",
+    "SERVICE_ACCOUNT": "@service_account",
+    "SESSION": "@session"
+  }
 }
