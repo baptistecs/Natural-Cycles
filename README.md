@@ -10,7 +10,7 @@ Follow the two Firebase steps (see "Production prerequisites") and set the ENV v
 
 For the SESSION environment variable, use the development example
 
-Then you are ready to go (Development Quickstart)
+Then you are ready to go (Development quickstart)
 
 ## Production prerequisites
 
@@ -87,9 +87,9 @@ Create the PORT environment variable from the `.env.example` file & define the b
 
 Create the NODE_ENV environment variable from the `.env.example` file & define the environment (`development`, `production`, ...)
 
-## Development Quickstart
+## Development quickstart
 
-````
+```
 
 $ npm install
 $ npm run start
@@ -98,7 +98,7 @@ $ npm run start
 
 Open http://localhost:8080
 
-## Production Quickstart
+## Production quickstart
 
 ```
 
@@ -106,6 +106,27 @@ $ npm install --only=production
 $ npm run prod-start
 
 ```
+
+## Staging quickstart
+
+Example with now.sh (zeit.co)
+
+```
+$ npm i -g now # install now client globally
+$ now login # login with your email
+
+# NOW.SH secrets setting example
+$ now secrets add node_env production
+$ now secrets add port 80
+$ now secrets add blake2b '{"key": "key - up to 64 bytes for blake2b, 32 for blake2s blake2s blake2s", "salt": "<n47ur4l cycl35>"}'
+$ now secrets add service_account '{"type": "service_account","project_id": "natural-cycles-[id]","private_key_id": "[40 hexa characters]","private_key": "-----BEGIN PRIVATE KEY-----\n[very long key]\n-----END PRIVATE KEY-----\n","client_email": "firebase-adminsdk-[id]@natural-cycles-[id].iam.gserviceaccount.com","client_id": "[21 numbers]","auth_uri": "https://accounts.google.com/o/oauth2/auth","token_uri": "https://oauth2.googleapis.com/token","auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-[id]c%40natural-cycles-[id].iam.gserviceaccount.com"}'
+$ now secrets add session '{"name": "[cookie-name]","secret": "[string or array. more informations here https://www.npmjs.com/package/express-session]","cookie": {  "secure": true,  "httpOnly": true,  "sameSite": "lax",  "domain": "now.sh",  "maxAge": 3153600000000},"resave": false,"saveUninitialized": false}'
+
+$ cd natural-cycles # move to the project directory
+$ now # deploy to staging
+```
+
+Actual staging is here natural-cycles-staging.now.sh
 
 ## Before to use in production
 
@@ -145,5 +166,7 @@ $ npm run prod-start
 - https://firebase.google.com/docs/database/admin/start
 - https://nodejs.org/api/cluster.html
 - https://cloud.google.com/blog/products/gcp/help-keep-your-google-cloud-service-account-keys-safe
+
 ```
-````
+
+```
