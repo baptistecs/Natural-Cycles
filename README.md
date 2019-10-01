@@ -89,7 +89,6 @@ $ npm run prod-start
 - Static route table for each controller
 - Use templating system with views http://expressjs.com/en/guide/using-template-engines.html
 - Use bootstrap
-- Exclude the dist folder for development branch and the src directory for the production branch
 
 ## Links
 
