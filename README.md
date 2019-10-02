@@ -126,7 +126,7 @@ $ cd natural-cycles # move to the project directory
 $ now # deploy to staging
 ```
 
-Actual staging is here natural-cycles-staging.now.sh
+Actual staging is here https://natural-cycles-staging.now.sh
 
 ## Before to use in production
 
