@@ -2,19 +2,41 @@
 
 Backend Challenge (Node.JS, Express, prettier & typescript)
 
-## Development prerequisites
+## Table of Contents
 
-Copy `.env.example` to `.env`
+1. [Prerequisites](#Prerequisites)
+   1. [Production & Staging prerequisites](#Production%20%26%20Staging%20prerequisites)
+      1. [Firebase Realtime Database ](#Firebase%20Realtime%20Database)
+         1. [Service account creation for Admin SDK](#Service%20account%20creation%20for%20Admin%20SDK)
+         2. [Create an email index and define read/write rules](#Create%20an%20email%20index%20and%20define%20read%2Fwrite%20rules)
+      1. [Session & Cookie config](#Session%20config)
+         1. [WARNING for `session.cookie.secure = true`](#WARNING%20for%20%60session.cookie.secure%20%3D%20true%60)
+         2. [Info](#Info)
+      1. [Blake2b config](#Blake2b%20config)
+      1. [App config](#App%20config)
+   2. [Development prerequisites](#Development%20prerequisites)
+2. [Quickstar](#Quickstart)
+   1. [Production & Staging quickstar](#Production%20%26%20Staging%20quickstar)
+   2. [Development quickstar](#Development%20quickstar)
+3. [Quickstart with now.sh (zeit.co) deployment tool](#Quickstart%20with%20now.sh%20%28zeit.co%29%20deployment%20tool)
+   1. [Install Now CLI](#Install%20Now%20CLI)
+   2. [Prod & Staging quickstart with now.sh](#Prod%20%26%20Staging%20quickstart%20with%20now.sh)
+      1. [Set ENV variables with now secrets](#Set%20ENV%20variables%20with%20now%20secrets)
+      2. [Deployment](#Deployment)
+         1. [Automatic](#Automatic)
+         2. [Manual](#Manual)
+   3. [Development quickstart with now.sh](#Development%20quickstart%20with%20now.sh)
+4. [Before to use in production](#Before%20to%20use%20in%20production)
+5. [TODO (OR NOT)](#TODO%20%28OR%20NOT%29)
+6. [Links](#Links)
 
-Follow the two Firebase steps (see "Production prerequisites") and set the ENV variables (for all the "Production prerequisites" steps) in this `.env` file
+## Prerequisites
 
-For the SESSION environment variable, use the development example
+### Production & Staging prerequisites
 
-Then you are ready to go (Development quickstart)
+#### Firebase Realtime Database
 
-## Production prerequisites
-
-### Firebase Realtime Database - Service account creation for Admin SDK
+##### Service account creation for Admin SDK
 
 Create a service account
 
@@ -22,7 +44,7 @@ Save the content of the `serviceAccountKey.json` in the SERVICE_ACCOUNT environm
 
 Documentation: https://firebase.google.com/support/guides/service-accounts
 
-### Firebase Realtime Database - Create an email index and define read/write rules
+##### Create an email index and define read/write rules
 
 In the Firebase Console > Project > Database > Rules, replace and save the following configuration:
 
@@ -47,15 +69,15 @@ In the Firebase Console > Project > Database > Rules, replace and save the follo
 
 Documentation: https://firebase.google.com/docs/database/security
 
-### Session config
+#### Session config
 
 Create the SESSION environment variable from the `.env.example` file (production example) & define name, secret & domain
 
 Documentation: https://www.npmjs.com/package/express-session
 
-#### WARNING if `session.cookie.secure = true`
+##### WARNING for `session.cookie.secure = true`
 
-The connexion should be https and https only
+The connexion should be https and https only, otherwise the cookie won't be set.
 
 If NGINX proxy is used, NGINX conf should contain:
 
@@ -67,7 +89,7 @@ map $http_x_forwarded_proto $proxy_x_forwarded_proto {
 proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
 ```
 
-#### Info
+##### Info
 
 `session.cookie.domain = "domain.com"`
 
@@ -77,56 +99,93 @@ main domain (and subdomains for news browsers)
 
 1000 ms x 60 s x 60 m x 24 h x 365 j = 100 ans
 
-### Blake2b config
+#### Blake2b config
 
 Create the BLAKE2B environment variable from the `.env.example` file & define key & salt
 
-### App config
+#### App config
 
 Create the PORT environment variable from the `.env.example` file & define the backend application port
 
 Create the NODE_ENV environment variable from the `.env.example` file & define the environment (`development`, `production`, ...)
 
-## Development quickstart
+### Development prerequisites
+
+Copy `.env.example` to `.env`
+
+Follow the two Firebase steps (see "[Production & Staging prerequisites](#Production%20%26%20Staging%20prerequisites)") and set the ENV variables (of all the "[Production & Staging prerequisites](#Production%20%26%20Staging%20prerequisites)" steps) in this `.env` file
+
+For the SESSION environment variable, use the development example
+
+Then you are ready to go (Development quickstart or Development quickstart with https://now.sh)
+
+## Quickstart
+
+### Production & Staging quickstar
+
+```
+
+$ npm install --only=production
+$ npm run start
+
+```
+
+### Development quickstar
 
 ```
 
 $ npm install
-$ npm run start
+$ npm run dev
 
 ```
 
 Open http://localhost:8080
 
-## Production quickstart
+## Quickstart with [now.sh](https://now.sh) ([zeit.co](https://zeit.co)) deployment tool
+
+### Install Now CLI
 
 ```
-
-$ npm install --only=production
-$ npm run prod-start
-
+$ npm i -g now
+$ now login
 ```
 
-## Staging quickstart
+### Prod & Staging quickstart with now.sh
 
-Example with now.sh (zeit.co)
+#### Set ENV variables with now secrets
 
 ```
-$ npm i -g now # install now client globally
-$ now login # login with your email
-
-# NOW.SH secrets setting example
 $ now secrets add node_env production
-$ now secrets add port 80
-$ now secrets add blake2b '{"key": "key - up to 64 bytes for blake2b, 32 for blake2s blake2s blake2s", "salt": "<n47ur4l cycl35>"}'
-$ now secrets add service_account '{"type": "service_account","project_id": "natural-cycles-[id]","private_key_id": "[40 hexa characters]","private_key": "-----BEGIN PRIVATE KEY-----\n[very long key]\n-----END PRIVATE KEY-----\n","client_email": "firebase-adminsdk-[id]@natural-cycles-[id].iam.gserviceaccount.com","client_id": "[21 numbers]","auth_uri": "https://accounts.google.com/o/oauth2/auth","token_uri": "https://oauth2.googleapis.com/token","auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-[id]c%40natural-cycles-[id].iam.gserviceaccount.com"}'
-$ now secrets add session '{"name": "[cookie-name]","secret": "[string or array. more informations here https://www.npmjs.com/package/express-session]","cookie": {  "secure": true,  "httpOnly": true,  "sameSite": "lax",  "domain": "now.sh",  "maxAge": 3153600000000},"resave": false,"saveUninitialized": false}'
 
+$ now secrets add port 80
+
+$ now secrets add blake2b '{"key": "key - up to 64 bytes for blake2b, 32 for blake2s blake2s blake2s", "salt": "<n47ur4l cycl35>"}'
+
+$ now secrets add service_account '{"type": "service_account","project_id": "natural-cycles-[id]","private_key_id": "[40 hexa characters]","private_key": "-----BEGIN PRIVATE KEY-----\n[very long key]\n-----END PRIVATE KEY-----\n","client_email": "firebase-adminsdk-[id]@natural-cycles-[id].iam.gserviceaccount.com","client_id": "[21 numbers]","auth_uri": "https://accounts.google.com/o/oauth2/auth","token_uri": "https://oauth2.googleapis.com/token","auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-[id]c%40natural-cycles-[id].iam.gserviceaccount.com"}'
+
+# WARN cookies doesn't work well with the production settings yet (debug in progress) use the development settings for now (see env.example)
+$ now secrets add session '{"name": "[cookie-name]","secret": "[string or array. more informations here https://www.npmjs.com/package/express-session]","cookie": {  "secure": true,  "httpOnly": true,  "sameSite": "lax",  "domain": "now.sh",  "maxAge": 3153600000000},"resave": false,"saveUninitialized": false}'
+```
+
+#### Deployment
+
+##### Automatic
+
+Deploy are automatically done when pushing on github when you create a new "Project from github" on [now.sh](https://now.sh)
+
+##### Manual
+
+```
 $ cd natural-cycles # move to the project directory
 $ now # deploy to staging
 ```
 
 Actual staging is here https://natural-cycles-staging.now.sh
+
+### Development quickstart with now.sh
+
+$ cd natural-cycles
+$ now dev
 
 ## Before to use in production
 
@@ -162,11 +221,6 @@ Actual staging is here https://natural-cycles-staging.now.sh
 - http://www.typescriptlang.org/docs/handbook/declaration-files/consumption.html
 - https://github.com/DefinitelyTyped/DefinitelyTyped
 - https://www.typescriptlang.org/docs/handbook/basic-types.html
-- https://en.wikipedia.org/wiki/Comparison_of_cryptographic_hash_functions
 - https://firebase.google.com/docs/database/admin/start
 - https://nodejs.org/api/cluster.html
 - https://cloud.google.com/blog/products/gcp/help-keep-your-google-cloud-service-account-keys-safe
-
-```
-
-```
