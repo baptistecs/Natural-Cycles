@@ -22,6 +22,9 @@ class Firebase {
         }
         return Firebase.instance;
     }
+    getAll(childPath) {
+        return this.ref.child(childPath).once('value');
+    }
     addReferenceListener(childPath, callback, event = 'child_added') {
         this.ref.child(childPath).on(event, snapshot => {
             if (snapshot) {
