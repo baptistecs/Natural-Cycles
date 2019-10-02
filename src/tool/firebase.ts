@@ -30,6 +30,11 @@ class Firebase {
     return Firebase.instance
   }
 
+  // e.g. childPath = "user"
+  getAll(childPath: string): Promise<FirebaseAdmin.database.DataSnapshot> {
+    return this.ref.child(childPath).once('value')
+  }
+
   addReferenceListener(
     childPath: string, // e.g. "user"
     callback: (id: string, value: any) => void,

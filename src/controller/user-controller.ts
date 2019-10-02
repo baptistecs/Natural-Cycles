@@ -10,6 +10,7 @@ class UserController implements ControllerInterface {
   readonly path: string = '/user'
   router: Express.Router = Express.Router()
   private static users: UserCollection = {}
+  private static loadingForced = false
 
   constructor() {
     this.intializeRoutes()
@@ -363,55 +364,94 @@ class UserController implements ControllerInterface {
 
   list = async (req: Express.Request, res: Express.Response) => {
     let users = UserController.getUsers()
-    let html = `<!doctype html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>Natural Cycles - User</title>
-          <style type="text/css">
-            a{text-decoration:none;color:royalblue}
-            a:hover{text-decoration:underline}
-            #user-list{display:table;margin:auto;padding:0 20px}
-            #user-list table{border-collapse:collapse;margin:0 auto 20px}
-            #user-list td{border:1px solid black;padding:0 5px}
-            </style>
-        </head>
-        <body>
-          <section id="user-list">
-            <h1>User list</h1>
-            <table>
-            <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Email</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-            <tbody>`
 
-    for (let userId in users) {
-      html += `<tr>
-        <td>${htmlEntities(userId)}</td>
-        <td>${htmlEntities(users[userId].getEmail())}</td>
-        <td>
-          <a href="${this.path}/${encodeURIComponent(userId)}/edit">Edit</a>
-        </td>
-      </tr>\n`
+    // we force user data load
+    if (!UserController.loadingForced && !Object.keys(users).length) {
+      console.log('User list loading forced (not great)')
+      UserController.loadingForced = true
+      let db = Firebase.getInstance()
+      db.getAll('user')
+        .then(snapshot => {
+          let usersData: UserCollection = snapshot.val()
+          let userVal: any
+
+          for (let userId in usersData) {
+            userVal = usersData[userId]
+            if (!userVal.id || !userVal.email) {
+              console.error(
+                "User from RTDB doesn't have the required parameters: ",
+                userId,
+                userVal,
+              )
+            }
+            let user = new User(userVal.email, userVal.id)
+            UserController.addOrUpdateUser(user) // better way to cast directly in the parameter?
+          }
+        })
+        .then(() => {
+          users = UserController.getUsers()
+          res.send(this.generateHtmlFromUserList(users))
+        })
+    } else {
+      res.send(this.generateHtmlFromUserList(users))
+    }
+  }
+
+  generateHtmlFromUserList = (users: UserCollection): string => {
+    let html = `<!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Natural Cycles - User</title>
+        <style type="text/css">
+          a{text-decoration:none;color:royalblue}
+          a:hover{text-decoration:underline}
+          .warning{margin-bottom:5px;display:block;color:orange}
+          #user-list{display:table;margin:auto;padding:0 20px}
+          #user-list table{border-collapse:collapse;margin:0 auto 20px}
+          #user-list td{border:1px solid black;padding:0 5px}
+          </style>
+      </head>
+      <body>
+        <section id="user-list">
+          <h1>User list</h1>
+          <table>
+          <thead>
+              <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+          <tbody>`
+
+    if (Object.keys(users).length) {
+      for (let userId in users) {
+        html += `<tr>
+      <td>${htmlEntities(userId)}</td>
+      <td>${htmlEntities(users[userId].getEmail())}</td>
+      <td>
+        <a href="${this.path}/${encodeURIComponent(userId)}/edit">Edit</a>
+      </td>
+    </tr>\n`
+      }
+    } else {
+      html += `<tr><td colspan="3">No user yet, please add one!</td></tr>`
     }
 
     html += `<tr>
-                  <td colspan="3" align="center" style="padding:5px 0 10px 0">
-                    <a href="${this.path}">Add a new user</a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>\n
-          </section>
-        </body>
-      </html>`
+                <td colspan="3" align="center" style="padding:5px 0 10px 0">
+                  <a href="${this.path}">Add a new user</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>\n
+        </section>
+      </body>
+    </html>`
 
-    res.send(html)
+    return html
   }
 
   displayForm = async (req: Express.Request, res: Express.Response) => {
