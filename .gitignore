@@ -19,6 +19,6 @@ Desktop.ini
 
 # npm
 node_modules
-package-lock.json
+# package-lock.json # SHOULD BE COMMITTED # guarantee exact same version of every package
 *.log
 *.gz
