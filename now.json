@@ -10,6 +10,7 @@
     "BLAKE2B": "@blake2b",
     "SERVICE_ACCOUNT": "@service_account",
     "SESSION": "@session",
-    "SESSION_STORE_TYPE": "@session_store_type"
+    "SESSION_STORE_TYPE": "@session_store_type",
+    "SESSION_COLLECTION_NAME": "@session_collection_name"
   }
 }

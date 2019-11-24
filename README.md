@@ -4,31 +4,33 @@ Backend Challenge (Node.JS, Express, prettier & typescript)
 
 ## Table of Contents
 
-1. [Prerequisites](#Prerequisites)
-   1. [Production & Staging prerequisites](#Production%20%26%20Staging%20prerequisites)
-      1. [Firebase Realtime Database ](#Firebase%20Realtime%20Database)
-         1. [Service account creation for Admin SDK](#Service%20account%20creation%20for%20Admin%20SDK)
-         2. [Create an email index and define read/write rules](#Create%20an%20email%20index%20and%20define%20read%2Fwrite%20rules)
-      1. [Session & Cookie config](#Session%20config)
-         1. [WARNING for `session.cookie.secure = true`](#WARNING%20for%20%60session.cookie.secure%20%3D%20true%60)
-         2. [Info](#Info)
-      1. [Blake2b config](#Blake2b%20config)
-      1. [App config](#App%20config)
-   2. [Development prerequisites](#Development%20prerequisites)
-2. [Quickstar](#Quickstart)
-   1. [Production & Staging quickstar](#Production%20%26%20Staging%20quickstar)
-   2. [Development quickstar](#Development%20quickstar)
-3. [Quickstart with now.sh (zeit.co) deployment tool](#Quickstart%20with%20now.sh%20%28zeit.co%29%20deployment%20tool)
-   1. [Install Now CLI](#Install%20Now%20CLI)
-   2. [Prod & Staging quickstart with now.sh](#Prod%20%26%20Staging%20quickstart%20with%20now.sh)
-      1. [Set ENV variables with now secrets](#Set%20ENV%20variables%20with%20now%20secrets)
-      2. [Deployment](#Deployment)
-         1. [Automatic](#Automatic)
-         2. [Manual](#Manual)
-   3. [Development quickstart with now.sh](#Development%20quickstart%20with%20now.sh)
-4. [Before to use in production](#Before%20to%20use%20in%20production)
-5. [TODO (OR NOT)](#TODO%20%28OR%20NOT%29)
-6. [Links](#Links)
+- [Natural Cycles](#Natural-Cycles)
+  - [Table of Contents](#Table-of-Contents)
+  - [Prerequisites](#Prerequisites)
+    - [Production & Staging prerequisites](#Production--Staging-prerequisites)
+      - [Firebase Realtime Database](#Firebase-Realtime-Database)
+        - [Service account creation for Admin SDK](#Service-account-creation-for-Admin-SDK)
+        - [Create an email index and define read/write rules](#Create-an-email-index-and-define-readwrite-rules)
+      - [Session config](#Session-config)
+        - [WARNING for `session.cookie.secure = true`](#WARNING-for-sessioncookiesecure--true)
+        - [Info](#Info)
+      - [Blake2b config](#Blake2b-config)
+      - [App config](#App-config)
+    - [Development prerequisites](#Development-prerequisites)
+  - [Quickstart](#Quickstart)
+    - [Production & Staging quickstar](#Production--Staging-quickstar)
+    - [Development quickstar](#Development-quickstar)
+  - [Quickstart with now.sh (zeit.co) deployment tool](#Quickstart-with-nowsh-zeitco-deployment-tool)
+    - [Install Now CLI](#Install-Now-CLI)
+    - [Prod & Staging quickstart with now.sh](#Prod--Staging-quickstart-with-nowsh)
+      - [Set ENV variables with now secrets](#Set-ENV-variables-with-now-secrets)
+      - [Deployment](#Deployment)
+        - [Automatic](#Automatic)
+        - [Manual](#Manual)
+    - [Development quickstart with now.sh](#Development-quickstart-with-nowsh)
+  - [Before to use in production](#Before-to-use-in-production)
+  - [TODO (OR NOT)](#TODO-OR-NOT)
+  - [Links](#Links)
 
 ## Prerequisites
 
@@ -164,7 +166,14 @@ $ now secrets add blake2b '{"key": "key - up to 64 bytes for blake2b, 32 for bla
 $ now secrets add service_account '{"type": "service_account","project_id": "natural-cycles-[id]","private_key_id": "[40 hexa characters]","private_key": "-----BEGIN PRIVATE KEY-----\n[very long key]\n-----END PRIVATE KEY-----\n","client_email": "firebase-adminsdk-[id]@natural-cycles-[id].iam.gserviceaccount.com","client_id": "[21 numbers]","auth_uri": "https://accounts.google.com/o/oauth2/auth","token_uri": "https://oauth2.googleapis.com/token","auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-[id]c%40natural-cycles-[id].iam.gserviceaccount.com"}'
 
 # WARN cookies doesn't work well with the production settings yet (debug in progress) use the development settings for now (see env.example)
-$ now secrets add session '{"name": "[cookie-name]","secret": "[string or array. more informations here https://www.npmjs.com/package/express-session]","cookie": {  "secure": true,  "httpOnly": true,  "sameSite": "lax",  "domain": "now.sh",  "maxAge": 3153600000000},"resave": false,"saveUninitialized": false}'
+
+$ now secrets add session '{"name":"[cookie-name]","secret":"[string or array. more informations here https://www.npmjs.com/package/express-session]","cookie":{"secure":true,"httpOnly":true,"sameSite":"lax","domain":"now.sh","maxAge":3153600000000},"resave":false,"saveUninitialized":false}'
+
+$ now secrets add session_store_type 'firestore-store'
+
+# optionnal:
+
+$ now secrets add session_collection_name '__session'
 ```
 
 #### Deployment
