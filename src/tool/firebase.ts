@@ -1,3 +1,4 @@
+import Session from 'express-session'
 import FirebaseAdmin from 'firebase-admin'
 
 class Firebase {
@@ -17,6 +18,7 @@ class Firebase {
       ),
       databaseURL: 'https://natural-cycles-1.firebaseio.com/',
     })
+
     this.ref = FirebaseAdmin.database().ref(parentPath)
   }
 
@@ -28,6 +30,15 @@ class Firebase {
       Firebase.instance = new Firebase(parentPath)
     }
     return Firebase.instance
+  }
+
+  getFirestoreStore() {
+    const FirestoreStore = require('firestore-store')(Session)
+    return new FirestoreStore({
+      database: FirebaseAdmin.firestore(),
+      collection: process.env.SESSION_COLLECTION_NAME || 'sessions',
+    })
+    // return FirebaseAdmin.firestore()
   }
 
   // e.g. childPath = "user"
@@ -77,20 +88,18 @@ class Firebase {
     return this.ref.child(childPath + '/' + key).remove()
   }
 
-  pushObject(
+  /** to be tested */
+  /* pushObject(
     childPath: string, // e.g. "user"
     data: Object,
   ) {
-    this.ref
-      .child(childPath)
-      .push(data)
-      .then(result => {
-        console.log(childPath + ' added on this node: ' + result.key)
-      })
-      .catch(reason => {
-        throw new Error(reason)
-      })
-  }
+    try {
+      let result = this.ref.child(childPath).push(data)
+      console.log(childPath + ' added on this node: ' + result.key)
+    } catch (reason) {
+      throw new Error(reason)
+    }
+  } */
 }
 
 export default Firebase

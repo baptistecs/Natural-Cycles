@@ -1,6 +1,6 @@
 import ControllerInterface from '../interface/controller'
 import Express from 'express'
-import { default as Firebase, EventType } from '../tool/firebase'
+import Firebase, { EventType } from '../tool/firebase'
 import User from '../model/user'
 import UserCollection from '../interface/user-collection'
 import Blake2b from '../tool/blake2b'
@@ -10,10 +10,12 @@ class UserController implements ControllerInterface {
   readonly path: string = '/user'
   router: Express.Router = Express.Router()
   private static users: UserCollection = {}
-  private static loadingForced = false
+  private static onAppStartInitialized = false
 
   constructor() {
+    console.log('UserController constructor')
     this.intializeRoutes()
+    this.onAppStart()
   }
 
   intializeRoutes() {
@@ -28,6 +30,11 @@ class UserController implements ControllerInterface {
   }
 
   onAppStart() {
+    if (UserController.onAppStartInitialized) {
+      return
+    }
+    UserController.onAppStartInitialized = true
+    console.log('UserController onAppStart loaded')
     this.addRealtimeDatabaseUserListeners()
   }
 
@@ -60,15 +67,9 @@ class UserController implements ControllerInterface {
     db.addReferenceListener(
       'user',
       (userId: string, userVal: any) => {
-        if (!UserController.users[userId]) {
-          console.error(
-            'userId from RTDB not found on this node for deletion: ',
-            userId,
-            userVal,
-          )
-          return
+        if (UserController.users[userId]) {
+          delete UserController.users[userId]
         }
-        delete UserController.users[userId]
       },
       'child_removed',
     )
@@ -102,82 +103,61 @@ class UserController implements ControllerInterface {
       let emailFormated = User.emailFormat(email)
       let userId = ''
 
-      Blake2b.getInstance()
-        .getDigest(emailFormated)
-        .then(digest => {
-          let userExist = UserController.users[digest]
-          // test if user already exist by id
-          if (userExist) {
-            errorCode = 409 // conflict
-            if (userExist.getEmail() == emailFormated) {
-              console.log(emailFormated)
-              throw new Error('An account already exists with this email')
-            } else {
-              console.log(emailFormated + ' ' + userExist.getId())
-              throw new Error(`An account have been created with this email and
-                the email have been updated. Please update the email in the
-                existing account if needed.`)
-            }
-          }
+      const digest = await Blake2b.getInstance().getDigest(emailFormated)
+      let userExist = UserController.users[digest]
+      // test if user already exist by id
+      if (userExist) {
+        errorCode = 409 // conflict
+        if (userExist.getEmail() == emailFormated) {
+          console.log(emailFormated)
+          throw new Error('An account already exists with this email')
+        } else {
+          console.log(emailFormated + ' ' + userExist.getId())
+          throw new Error(`An account have been created with this email and
+            the email have been updated. Please update the email in the
+            existing account if needed.`)
+        }
+      }
 
-          userId = digest
+      userId = digest
 
-          // test if user exists in database by email having an old ID (from a previous email)
-          db = Firebase.getInstance()
-          return db.getFirstObjectByChildProperty(
-            'user',
-            'email',
-            emailFormated,
-          )
-        })
-        .then(userSnapshot => {
-          if (userSnapshot.exists()) {
-            errorCode = 409 // conflict
-            console.log(emailFormated)
-            // let dbUser = userSnapshot.exportVal()
-            // let key = Object.keys(dbUser)[0]
-            throw new Error('An account already exists with this email')
-          }
+      // test if user exists in database by email having an old ID (from a previous email)
+      db = Firebase.getInstance()
+      const userSnapshot = await db.getFirstObjectByChildProperty(
+        'user',
+        'email',
+        emailFormated,
+      )
 
-          user = new User(email, userId)
+      if (userSnapshot.exists()) {
+        errorCode = 409 // conflict
+        console.log(emailFormated)
+        // let dbUser = userSnapshot.exportVal()
+        // let key = Object.keys(dbUser)[0]
+        throw new Error('An account already exists with this email')
+      }
 
-          return db.setObject('user', user.getId(), user)
-        })
-        .then(
-          () => {
-            // quick update on this node so we don't wait for db notif, hoping that
-            // the load balancer is setup so it keep clients on the same node
-            UserController.users[user.getId()] = user
+      user = new User(email, userId)
 
-            if (req.body._redirect) {
-              sess.successMessage = 'User created successfully'
-              res.redirect(
-                this.path + '/' + encodeURIComponent(user.getId()) + '/edit',
-              )
-            } else {
-              // 201 created
-              res.status(201).json({
-                error: false,
-                message: 'User created successfully',
-                user: user,
-              })
-            }
-          },
-          reason => {
-            console.error(reason)
+      // quick update on this node so we don't wait for db notif, hoping that
+      // the load balancer is setup so it keep clients on the same node
+      UserController.users[user.getId()] = user
 
-            if (req.body._redirect) {
-              sess.errorMessage = reason.toString()
-              res.redirect(this.path + '?email=' + encodeURIComponent(email))
-            } else {
-              // internal server error
-              res.status(500).json({
-                error: true,
-                message: reason.toString(),
-              })
-            }
-          },
+      db.setObject('user', user.getId(), user)
+
+      if (req.body._redirect) {
+        sess.successMessage = 'User created successfully'
+        res.redirect(
+          this.path + '/' + encodeURIComponent(user.getId()) + '/edit',
         )
+      } else {
+        // 201 created
+        res.status(201).json({
+          error: false,
+          message: 'User created successfully',
+          user: user,
+        })
+      }
     } catch (userError) {
       console.error(userError)
 
@@ -244,46 +224,24 @@ class UserController implements ControllerInterface {
 
       user.setEmail(req.body.email)
 
-      let db = Firebase.getInstance()
+      // quick update on this node so we don't wait for db notif, hoping that
+      // the load balancer is setup so it keep clients on the same node
+      UserController.users[req.params.user_id] = user
 
-      db.setObject('user', user.getId(), user).then(
-        () => {
-          // quick update on this node so we don't wait for db notif, hoping that
-          // the load balancer is setup so it keep clients on the same node
-          UserController.users[req.params.user_id] = user
+      Firebase.getInstance().setObject('user', user.getId(), user)
 
-          if (req.body._redirect) {
-            sess.successMessage = 'User updated successfully'
-            res.redirect(
-              this.path + '/' + encodeURIComponent(user.getId()) + '/edit',
-            )
-          } else {
-            res.status(200).json({
-              error: false,
-              message: 'User updated successfully',
-              user: user,
-            })
-          }
-        },
-        reason => {
-          console.error(reason)
-
-          if (req.body._redirect) {
-            sess.errorMessage = reason.toString()
-            res.redirect(
-              this.path +
-                '/' +
-                encodeURIComponent(req.params.user_id) +
-                '/edit',
-            )
-          } else {
-            res.status(500).json({
-              error: true,
-              message: reason.toString(),
-            })
-          }
-        },
-      )
+      if (req.body._redirect) {
+        sess.successMessage = 'User updated successfully'
+        res.redirect(
+          this.path + '/' + encodeURIComponent(user.getId()) + '/edit',
+        )
+      } else {
+        res.status(200).json({
+          error: false,
+          message: 'User updated successfully',
+          user: user,
+        })
+      }
     } catch (userError) {
       console.error(userError)
 
@@ -319,37 +277,22 @@ class UserController implements ControllerInterface {
       let user = UserController.users[req.params.user_id]
       let db = Firebase.getInstance()
 
-      db.removeObject('user', user.getId()).then(
-        () => {
-          // quick update on this node so we don't wait for db notif, hoping that
-          // the load balancer is setup so it keep clients on the same node
-          delete UserController.users[req.params.user_id]
+      // quick update on this node so we don't wait for db notif, hoping that
+      // the load balancer is setup so it keep clients on the same node
+      delete UserController.users[req.params.user_id]
 
-          if (req.body._redirect) {
-            sess.successMessage = 'User deleted successfully'
-            res.redirect(this.path + '/list')
-          } else {
-            res.status(204).json({
-              error: false,
-              message: 'User deleted successfully',
-              user: user,
-            })
-          }
-        },
-        reason => {
-          console.error(reason)
+      db.removeObject('user', user.getId())
 
-          if (req.body._redirect) {
-            sess.errorMessage = reason.toString()
-            res.redirect(this.path + '/list')
-          } else {
-            res.status(500).json({
-              error: true,
-              message: reason.toString(),
-            })
-          }
-        },
-      )
+      if (req.body._redirect) {
+        sess.successMessage = 'User deleted successfully'
+        res.redirect(this.path + '/list')
+      } else {
+        res.status(204).json({
+          error: false,
+          message: 'User deleted successfully',
+          user: user,
+        })
+      }
     } catch (userError) {
       console.error(userError)
 
@@ -366,35 +309,31 @@ class UserController implements ControllerInterface {
     let users = UserController.getUsers()
 
     // we force user data load
-    if (!UserController.loadingForced && !Object.keys(users).length) {
+    if (!UserController.onAppStartInitialized) {
+      this.onAppStart()
       console.log('User list loading forced (not great)')
-      UserController.loadingForced = true
       let db = Firebase.getInstance()
-      db.getAll('user')
-        .then(snapshot => {
-          let usersData: UserCollection = snapshot.val()
-          let userVal: any
+      const snapshot = await db.getAll('user')
+      let usersData: UserCollection = snapshot.val()
+      let userVal: any
 
-          for (let userId in usersData) {
-            userVal = usersData[userId]
-            if (!userVal.id || !userVal.email) {
-              console.error(
-                "User from RTDB doesn't have the required parameters: ",
-                userId,
-                userVal,
-              )
-            }
-            let user = new User(userVal.email, userVal.id)
-            UserController.addOrUpdateUser(user) // better way to cast directly in the parameter?
-          }
-        })
-        .then(() => {
-          users = UserController.getUsers()
-          res.send(this.generateHtmlFromUserList(users))
-        })
-    } else {
-      res.send(this.generateHtmlFromUserList(users))
+      for (let userId in usersData) {
+        userVal = usersData[userId]
+        if (!userVal.id || !userVal.email) {
+          console.error(
+            "User from RTDB doesn't have the required parameters: ",
+            userId,
+            userVal,
+          )
+        }
+        let user = new User(userVal.email, userVal.id)
+        UserController.addOrUpdateUser(user) // better way to cast directly in the parameter?
+      }
+
+      users = UserController.getUsers()
     }
+
+    res.send(this.generateHtmlFromUserList(users))
   }
 
   generateHtmlFromUserList = (users: UserCollection): string => {
