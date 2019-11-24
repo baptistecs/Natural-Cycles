@@ -173,7 +173,7 @@ $ now secrets add session_store_type 'firestore-store'
 
 # optionnal:
 
-$ now secrets add session_collection_name '__session'
+$ now secrets add session_collection_name 'sessions'
 ```
 
 #### Deployment
