@@ -1,7 +1,7 @@
 {
-  "name": "Natural-Cycles",
   "version": 2,
-  "builds": [{ "src": "dist/**", "use": "@now/node" }],
+  "name": "Natural-Cycles",
+  "builds": [{ "src": "/dist/**", "use": "@now/node@canary" }],
   "routes": [{ "src": "/(.*)", "dest": "/dist/index.js" }],
   "github": { "enabled": true },
   "env": {
@@ -9,6 +9,7 @@
     "PORT": "@port",
     "BLAKE2B": "@blake2b",
     "SERVICE_ACCOUNT": "@service_account",
-    "SESSION": "@session"
+    "SESSION": "@session",
+    "SESSION_STORE_TYPE": "@session_store_type"
   }
 }
