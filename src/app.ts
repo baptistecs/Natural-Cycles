@@ -63,6 +63,7 @@ class App {
     if (process.env.SESSION_STORE_TYPE === 'firestore-store') {
       this.sessionConfig.store = Firebase.getInstance().getFirestoreStore()
     }
+    this.express.set('trust proxy', 1)
     this.express.use(Session(this.sessionConfig))
   }
 
