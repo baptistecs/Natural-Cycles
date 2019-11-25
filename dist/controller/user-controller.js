@@ -39,62 +39,43 @@ class UserController {
                 }
                 let emailFormated = user_1.default.emailFormat(email);
                 let userId = '';
-                blake2b_1.default.getInstance()
-                    .getDigest(emailFormated)
-                    .then(digest => {
-                    let userExist = UserController.users[digest];
-                    if (userExist) {
-                        errorCode = 409;
-                        if (userExist.getEmail() == emailFormated) {
-                            console.log(emailFormated);
-                            throw new Error('An account already exists with this email');
-                        }
-                        else {
-                            console.log(emailFormated + ' ' + userExist.getId());
-                            throw new Error(`An account have been created with this email and
-                the email have been updated. Please update the email in the
-                existing account if needed.`);
-                        }
-                    }
-                    userId = digest;
-                    db = firebase_1.default.getInstance();
-                    return db.getFirstObjectByChildProperty('user', 'email', emailFormated);
-                })
-                    .then(userSnapshot => {
-                    if (userSnapshot.exists()) {
-                        errorCode = 409;
+                const digest = yield blake2b_1.default.getInstance().getDigest(emailFormated);
+                let userExist = UserController.users[digest];
+                if (userExist) {
+                    errorCode = 409;
+                    if (userExist.getEmail() == emailFormated) {
                         console.log(emailFormated);
                         throw new Error('An account already exists with this email');
                     }
-                    user = new user_1.default(email, userId);
-                    return db.setObject('user', user.getId(), user);
-                })
-                    .then(() => {
-                    UserController.users[user.getId()] = user;
-                    if (req.body._redirect) {
-                        sess.successMessage = 'User created successfully';
-                        res.redirect(this.path + '/' + encodeURIComponent(user.getId()) + '/edit');
-                    }
                     else {
-                        res.status(201).json({
-                            error: false,
-                            message: 'User created successfully',
-                            user: user,
-                        });
+                        console.log(emailFormated + ' ' + userExist.getId());
+                        throw new Error(`An account have been created with this email and
+            the email have been updated. Please update the email in the
+            existing account if needed.`);
                     }
-                }, reason => {
-                    console.error(reason);
-                    if (req.body._redirect) {
-                        sess.errorMessage = reason.toString();
-                        res.redirect(this.path + '?email=' + encodeURIComponent(email));
-                    }
-                    else {
-                        res.status(500).json({
-                            error: true,
-                            message: reason.toString(),
-                        });
-                    }
-                });
+                }
+                userId = digest;
+                db = firebase_1.default.getInstance();
+                const userSnapshot = yield db.getFirstObjectByChildProperty('user', 'email', emailFormated);
+                if (userSnapshot.exists()) {
+                    errorCode = 409;
+                    console.log(emailFormated);
+                    throw new Error('An account already exists with this email');
+                }
+                user = new user_1.default(email, userId);
+                UserController.users[user.getId()] = user;
+                db.setObject('user', user.getId(), user);
+                if (req.body._redirect) {
+                    sess.successMessage = 'User created successfully';
+                    res.redirect(this.path + '/' + encodeURIComponent(user.getId()) + '/edit');
+                }
+                else {
+                    res.status(201).json({
+                        error: false,
+                        message: 'User created successfully',
+                        user: user,
+                    });
+                }
             }
             catch (userError) {
                 console.error(userError);
@@ -151,36 +132,19 @@ class UserController {
             try {
                 let currentUser = UserController.users[req.params.user_id], user = new user_1.default(currentUser.getEmail(), currentUser.getId());
                 user.setEmail(req.body.email);
-                let db = firebase_1.default.getInstance();
-                db.setObject('user', user.getId(), user).then(() => {
-                    UserController.users[req.params.user_id] = user;
-                    if (req.body._redirect) {
-                        sess.successMessage = 'User updated successfully';
-                        res.redirect(this.path + '/' + encodeURIComponent(user.getId()) + '/edit');
-                    }
-                    else {
-                        res.status(200).json({
-                            error: false,
-                            message: 'User updated successfully',
-                            user: user,
-                        });
-                    }
-                }, reason => {
-                    console.error(reason);
-                    if (req.body._redirect) {
-                        sess.errorMessage = reason.toString();
-                        res.redirect(this.path +
-                            '/' +
-                            encodeURIComponent(req.params.user_id) +
-                            '/edit');
-                    }
-                    else {
-                        res.status(500).json({
-                            error: true,
-                            message: reason.toString(),
-                        });
-                    }
-                });
+                UserController.users[req.params.user_id] = user;
+                firebase_1.default.getInstance().setObject('user', user.getId(), user);
+                if (req.body._redirect) {
+                    sess.successMessage = 'User updated successfully';
+                    res.redirect(this.path + '/' + encodeURIComponent(user.getId()) + '/edit');
+                }
+                else {
+                    res.status(200).json({
+                        error: false,
+                        message: 'User updated successfully',
+                        user: user,
+                    });
+                }
             }
             catch (userError) {
                 console.error(userError);
@@ -210,32 +174,19 @@ class UserController {
             try {
                 let user = UserController.users[req.params.user_id];
                 let db = firebase_1.default.getInstance();
-                db.removeObject('user', user.getId()).then(() => {
-                    delete UserController.users[req.params.user_id];
-                    if (req.body._redirect) {
-                        sess.successMessage = 'User deleted successfully';
-                        res.redirect(this.path + '/list');
-                    }
-                    else {
-                        res.status(204).json({
-                            error: false,
-                            message: 'User deleted successfully',
-                            user: user,
-                        });
-                    }
-                }, reason => {
-                    console.error(reason);
-                    if (req.body._redirect) {
-                        sess.errorMessage = reason.toString();
-                        res.redirect(this.path + '/list');
-                    }
-                    else {
-                        res.status(500).json({
-                            error: true,
-                            message: reason.toString(),
-                        });
-                    }
-                });
+                delete UserController.users[req.params.user_id];
+                db.removeObject('user', user.getId());
+                if (req.body._redirect) {
+                    sess.successMessage = 'User deleted successfully';
+                    res.redirect(this.path + '/list');
+                }
+                else {
+                    res.status(204).json({
+                        error: false,
+                        message: 'User deleted successfully',
+                        user: user,
+                    });
+                }
             }
             catch (userError) {
                 console.error(userError);
@@ -250,31 +201,24 @@ class UserController {
         });
         this.list = (req, res) => __awaiter(this, void 0, void 0, function* () {
             let users = UserController.getUsers();
-            if (!UserController.loadingForced && !Object.keys(users).length) {
+            if (!UserController.onAppStartInitialized) {
+                this.onAppStart();
                 console.log('User list loading forced (not great)');
-                UserController.loadingForced = true;
                 let db = firebase_1.default.getInstance();
-                db.getAll('user')
-                    .then(snapshot => {
-                    let usersData = snapshot.val();
-                    let userVal;
-                    for (let userId in usersData) {
-                        userVal = usersData[userId];
-                        if (!userVal.id || !userVal.email) {
-                            console.error("User from RTDB doesn't have the required parameters: ", userId, userVal);
-                        }
-                        let user = new user_1.default(userVal.email, userVal.id);
-                        UserController.addOrUpdateUser(user);
+                const snapshot = yield db.getAll('user');
+                let usersData = snapshot.val();
+                let userVal;
+                for (let userId in usersData) {
+                    userVal = usersData[userId];
+                    if (!userVal.id || !userVal.email) {
+                        console.error("User from RTDB doesn't have the required parameters: ", userId, userVal);
                     }
-                })
-                    .then(() => {
-                    users = UserController.getUsers();
-                    res.send(this.generateHtmlFromUserList(users));
-                });
+                    let user = new user_1.default(userVal.email, userVal.id);
+                    UserController.addOrUpdateUser(user);
+                }
+                users = UserController.getUsers();
             }
-            else {
-                res.send(this.generateHtmlFromUserList(users));
-            }
+            res.send(this.generateHtmlFromUserList(users));
         });
         this.generateHtmlFromUserList = (users) => {
             let html = `<!doctype html>
@@ -404,7 +348,9 @@ class UserController {
       </body>
       </html>`);
         });
+        console.log('UserController constructor');
         this.intializeRoutes();
+        this.onAppStart();
     }
     intializeRoutes() {
         this.router
@@ -417,6 +363,11 @@ class UserController {
             .get(this.path + '/:user_id/edit', this.displayForm);
     }
     onAppStart() {
+        if (UserController.onAppStartInitialized) {
+            return;
+        }
+        UserController.onAppStartInitialized = true;
+        console.log('UserController onAppStart loaded');
         this.addRealtimeDatabaseUserListeners();
     }
     addRealtimeDatabaseUserListeners() {
@@ -433,11 +384,9 @@ class UserController {
             }, eventType);
         });
         db.addReferenceListener('user', (userId, userVal) => {
-            if (!UserController.users[userId]) {
-                console.error('userId from RTDB not found on this node for deletion: ', userId, userVal);
-                return;
+            if (UserController.users[userId]) {
+                delete UserController.users[userId];
             }
-            delete UserController.users[userId];
         }, 'child_removed');
         console.log('Listening users from the database...');
     }
@@ -458,6 +407,6 @@ class UserController {
     }
 }
 UserController.users = {};
-UserController.loadingForced = false;
+UserController.onAppStartInitialized = false;
 exports.default = UserController;
 //# sourceMappingURL=user-controller.js.map

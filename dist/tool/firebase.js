@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const express_session_1 = __importDefault(require("express-session"));
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
 class Firebase {
     constructor(parentPath) {
@@ -21,6 +22,13 @@ class Firebase {
             Firebase.instance = new Firebase(parentPath);
         }
         return Firebase.instance;
+    }
+    getFirestoreStore() {
+        const FirestoreStore = require('firestore-store')(express_session_1.default);
+        return new FirestoreStore({
+            database: firebase_admin_1.default.firestore(),
+            collection: process.env.SESSION_COLLECTION_NAME || 'sessions',
+        });
     }
     getAll(childPath) {
         return this.ref.child(childPath).once('value');
@@ -45,17 +53,6 @@ class Firebase {
     }
     removeObject(childPath, key) {
         return this.ref.child(childPath + '/' + key).remove();
-    }
-    pushObject(childPath, data) {
-        this.ref
-            .child(childPath)
-            .push(data)
-            .then(result => {
-            console.log(childPath + ' added on this node: ' + result.key);
-        })
-            .catch(reason => {
-            throw new Error(reason);
-        });
     }
 }
 exports.default = Firebase;
