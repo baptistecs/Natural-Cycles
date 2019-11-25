@@ -333,10 +333,15 @@ class UserController implements ControllerInterface {
       users = UserController.getUsers()
     }
 
-    res.send(this.generateHtmlFromUserList(users))
+    let flashMessages = this.getFlashMessages(req)
+
+    res.send(this.generateHtmlFromUserList(users, flashMessages))
   }
 
-  generateHtmlFromUserList = (users: UserCollection): string => {
+  generateHtmlFromUserList = (
+    users: UserCollection,
+    flashMessages: string,
+  ): string => {
     let html = `<!doctype html>
     <html lang="en">
       <head>
@@ -354,6 +359,7 @@ class UserController implements ControllerInterface {
       </head>
       <body>
         <section id="user-list">
+          ${flashMessages}
           <h1>User list</h1>
           <table>
           <thead>
@@ -393,32 +399,33 @@ class UserController implements ControllerInterface {
     return html
   }
 
-  displayForm = async (req: Express.Request, res: Express.Response) => {
+  getFlashMessages(req: Express.Request) {
     const sess: any = req.session
-    let userId = req.params.user_id || '',
-      userEmail = '',
-      errorHtml = '',
-      successHtml = '',
-      deleteForm = ''
-
+    let html = ''
     if (sess.successMessage) {
-      successHtml += `<b class="success">${htmlEntities(
-        sess.successMessage,
-      )}</b>\n`
+      html += `<b class="success">${htmlEntities(sess.successMessage)}</b>\n`
       delete sess.successMessage
     }
 
     if (sess.errorMessage) {
-      errorHtml += `<b class="error">${htmlEntities(sess.errorMessage)}</b>\n`
+      html += `<b class="error">${htmlEntities(sess.errorMessage)}</b>\n`
       delete sess.errorMessage
     }
+    return html
+  }
+
+  displayForm = async (req: Express.Request, res: Express.Response) => {
+    let userId = req.params.user_id || '',
+      userEmail = '',
+      deleteForm = '',
+      flashMessages = this.getFlashMessages(req)
 
     if (userId) {
       try {
         userEmail = UserController.getUser(req.params.user_id).getEmail()
       } catch (userError) {
         console.error(userError)
-        errorHtml += `<b class="error">${htmlEntities(userError)}</b><br>\n`
+        flashMessages += `<b class="error">${htmlEntities(userError)}</b><br>\n`
       }
 
       deleteForm = `
@@ -453,7 +460,7 @@ class UserController implements ControllerInterface {
       <body>
         <section id="user-list">
           <h1>User ${userId ? 'update' : 'creation'}</h1>
-          ${successHtml + errorHtml}
+          ${flashMessages}
           <form method="post"
             action="${this.path}${
       userId ? '/' + encodeURIComponent(req.params.user_id) : ''
