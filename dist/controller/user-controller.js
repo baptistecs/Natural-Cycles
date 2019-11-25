@@ -218,9 +218,10 @@ class UserController {
                 }
                 users = UserController.getUsers();
             }
-            res.send(this.generateHtmlFromUserList(users));
+            let flashMessages = this.getFlashMessages(req);
+            res.send(this.generateHtmlFromUserList(users, flashMessages));
         });
-        this.generateHtmlFromUserList = (users) => {
+        this.generateHtmlFromUserList = (users, flashMessages) => {
             let html = `<!doctype html>
     <html lang="en">
       <head>
@@ -238,6 +239,7 @@ class UserController {
       </head>
       <body>
         <section id="user-list">
+          ${flashMessages}
           <h1>User list</h1>
           <table>
           <thead>
@@ -275,23 +277,14 @@ class UserController {
             return html;
         };
         this.displayForm = (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const sess = req.session;
-            let userId = req.params.user_id || '', userEmail = '', errorHtml = '', successHtml = '', deleteForm = '';
-            if (sess.successMessage) {
-                successHtml += `<b class="success">${string_1.htmlEntities(sess.successMessage)}</b>\n`;
-                delete sess.successMessage;
-            }
-            if (sess.errorMessage) {
-                errorHtml += `<b class="error">${string_1.htmlEntities(sess.errorMessage)}</b>\n`;
-                delete sess.errorMessage;
-            }
+            let userId = req.params.user_id || '', userEmail = '', deleteForm = '', flashMessages = this.getFlashMessages(req);
             if (userId) {
                 try {
                     userEmail = UserController.getUser(req.params.user_id).getEmail();
                 }
                 catch (userError) {
                     console.error(userError);
-                    errorHtml += `<b class="error">${string_1.htmlEntities(userError)}</b><br>\n`;
+                    flashMessages += `<b class="error">${string_1.htmlEntities(userError)}</b><br>\n`;
                 }
                 deleteForm = `
         <form action="${this.path}/${encodeURIComponent(req.params.user_id)}" method="post"
@@ -322,7 +315,7 @@ class UserController {
       <body>
         <section id="user-list">
           <h1>User ${userId ? 'update' : 'creation'}</h1>
-          ${successHtml + errorHtml}
+          ${flashMessages}
           <form method="post"
             action="${this.path}${userId ? '/' + encodeURIComponent(req.params.user_id) : ''}">
             ${userId ? `<input type="hidden" name="_method" value="PUT">` : ''}
@@ -389,6 +382,19 @@ class UserController {
             }
         }, 'child_removed');
         console.log('Listening users from the database...');
+    }
+    getFlashMessages(req) {
+        const sess = req.session;
+        let html = '';
+        if (sess.successMessage) {
+            html += `<b class="success">${string_1.htmlEntities(sess.successMessage)}</b>\n`;
+            delete sess.successMessage;
+        }
+        if (sess.errorMessage) {
+            html += `<b class="error">${string_1.htmlEntities(sess.errorMessage)}</b>\n`;
+            delete sess.errorMessage;
+        }
+        return html;
     }
     static getUsers() {
         return UserController.users;
